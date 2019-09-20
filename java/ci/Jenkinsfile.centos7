@@ -1,0 +1,52 @@
+pipeline {
+    agent none
+    options {
+        ansiColor('xterm')
+        timestamps()
+        timeout(time: 2, unit: 'HOURS')
+    }
+
+    parameters {
+        string(name: 'PARALLEL_LEVEL', defaultValue: '4',
+            description: 'Parallel build with: make -j{$PARALLEL_LEVEL}')
+        string(name: 'DEPLOY_JAR', defaultValue: '1',
+            description: 'Whether deploy jars to internal mvn repo.')
+    }
+
+    stages {
+        stage("Build"){
+            parallel {
+                stage("Compile for cuda9.2 on centos7") {
+                    agent {label 'cpu'}
+                    steps {
+                        checkout scm
+                        sh 'git submodule update --init --recursive'
+                        script {
+                            String imageName = "gpuci/java-base:centos7-cuda9.2"
+                            JENKINS_UID=sh(script: 'id -u', returnStdout: true).trim()
+                            JENKINS_GID=sh(script: 'id -g', returnStdout: true).trim()
+                            docker.image(imageName).inside("-u $JENKINS_UID:$JENKINS_GID --runtime=nvidia") {
+                                sh 'scl enable devtoolset-7 "$WORKSPACE/java/ci/build-centos7.sh"'
+                            }
+                        }
+                    }
+                }
+                stage("Compile for cuda10.0 on centos7") {
+                    agent {label 'cpu'}
+                    steps {
+                        checkout scm
+                        sh 'git submodule update --init --recursive'
+                        script {
+                            String imageName = "gpuci/java-base:centos7-cuda10.0"
+                            JENKINS_UID=sh(script: 'id -u', returnStdout: true).trim()
+                            JENKINS_GID=sh(script: 'id -g', returnStdout: true).trim()
+                            docker.image(imageName).inside("-u $JENKINS_UID:$JENKINS_GID --runtime=nvidia") {
+                                sh 'scl enable devtoolset-7 "$WORKSPACE/java/ci/build-centos7.sh"'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
