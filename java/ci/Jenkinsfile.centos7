@@ -46,6 +46,21 @@ pipeline {
                         }
                     }
                 }
+                stage("Compile for cuda10.1 on centos7") {
+                    agent {label 'cpu'}
+                    steps {
+                        checkout scm
+                        sh 'git submodule update --init --recursive'
+                        script {
+                            String imageName = "gpuci/java-base:centos7-cuda10.1"
+                            JENKINS_UID=sh(script: 'id -u', returnStdout: true).trim()
+                            JENKINS_GID=sh(script: 'id -g', returnStdout: true).trim()
+                            docker.image(imageName).inside("-u $JENKINS_UID:$JENKINS_GID --runtime=nvidia") {
+                                sh 'scl enable devtoolset-7 "$WORKSPACE/java/ci/build-centos7.sh"'
+                            }
+                        }
+                    }
+                }
             }
         }
     }
