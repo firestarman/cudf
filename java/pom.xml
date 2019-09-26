@@ -402,6 +402,9 @@
                                 switch(cm.group(1)) {
                                     case ~/10\\.0.*/:
                                         pom.properties['cuda.classifier'] = 'cuda10'
+					break
+				    case ~/10\\.1.*/:
+                                        pom.properties['cuda.classifier'] = 'cuda10-1'
                                         break
                                     default:
                                         pom.properties['cuda.classifier'] = ''
