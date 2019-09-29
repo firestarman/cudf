@@ -29,6 +29,7 @@
 - PR #2844 Add Series/DataFrame notnull
 - PR #2858 Add GTest type list utilities
 - PR #2655 CuPy-based Series and Dataframe .values property
+- PR #2803 Added `edit_distance_matrix()` function to calculate pairwise edit distance for each string on a given nvstrings object.
 
 ## Improvements
 
@@ -116,6 +117,7 @@
 - PR #2809 Add hash_df and group_split dispatch functions for dask
 - PR #2843 Parquet reader: fix skip_rows when not aligned with page or row_group boundaries
 - PR #2851 Deleted existing dask-cudf/record.txt
+- PR #2859 Fix tail method issue for string columns
 - PR #2852 Fixed `cumsum()` and `cumprod()` on boolean series.
 - PR #2750 Fixed casting values to cudf::bool8 so non-zero values always cast to true
 - PR #2873 Fixed dask_cudf read_partition bug by generating ParquetDatasetPiece
