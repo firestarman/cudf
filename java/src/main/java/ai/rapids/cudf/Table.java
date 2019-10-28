@@ -29,6 +29,7 @@ import java.util.*;
 public final class Table implements AutoCloseable {
   static {
     NativeDepsLoader.loadNativeDeps();
+    if (!Rmm.isInitialized()) Rmm.initialize(RmmAllocationMode.CUDA_DEFAULT, false, -1);
   }
 
   private final long rows;

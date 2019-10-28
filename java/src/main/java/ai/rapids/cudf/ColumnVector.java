@@ -40,6 +40,7 @@ public final class ColumnVector implements AutoCloseable, BinaryOperable {
 
   static {
     NativeDepsLoader.loadNativeDeps();
+    if (!Rmm.isInitialized()) Rmm.initialize(RmmAllocationMode.CUDA_DEFAULT, false, -1);
   }
 
   private final DType type;
