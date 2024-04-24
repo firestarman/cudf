@@ -722,7 +722,7 @@ public class JCudfSerialization {
   // PADDING FOR ALIGNMENT
   /////////////////////////////////////////////
   private static long padFor64byteAlignment(long orig) {
-    return ((orig + 63) / 64) * 64;
+    return ((orig + 63) >> 6) << 6; // ((orig + 63) / 64) * 64;
   }
 
   private static long padFor64byteAlignment(DataWriter out, long bytes) throws IOException {
@@ -1554,10 +1554,9 @@ public class JCudfSerialization {
     }
   }
 
-  private static void writeSliced(ColumnBufferProvider[] columns,
-                                  DataWriter out,
-                                  long rowOffset,
-                                  long numRows) throws IOException {
+  private static SerializedTableHeader writeSliced(ColumnBufferProvider[] columns,
+                                                   DataWriter out, long rowOffset,
+                                                   long numRows) throws IOException {
     assert rowOffset >= 0;
     assert numRows >= 0;
     for (int i = 0; i < columns.length; i++) {
@@ -1575,6 +1574,7 @@ public class JCudfSerialization {
       }
     }
     out.flush();
+    return header;
   }
 
   /**
@@ -1628,16 +1628,34 @@ public class JCudfSerialization {
   }
 
   /**
+   * (This returns the serialized total size.)
+   * @param closeAtEnd Whether to close the input host columns after done.
+   */
+  public static long writeToStream(OutputStream out, HostColumnVector[] columns,
+                                   long rowOffset, long numRows,
+                                   boolean closeAtEnd) throws IOException {
+    ColumnBufferProvider[] providers = providersFrom(columns, closeAtEnd);
+    try {
+      DataWriter writer = writerFrom(out);
+      SerializedTableHeader header = writeSliced(providers, writer, rowOffset, numRows);
+      return header.getTotalSerializedSizeInBytes();
+    } finally {
+      closeAll(providers);
+    }
+  }
+
+  /**
    * Write a rowcount only header to the output stream in a case
    * where a columnar batch with no columns but a non zero row count is received
    * @param out the stream to write the serialized table out to.
    * @param numRows the number of rows to write out.
    */
-  public static void writeRowsToStream(OutputStream out, long numRows) throws IOException {
+  public static long writeRowsToStream(OutputStream out, long numRows) throws IOException {
     DataWriter writer = writerFrom(out);
     SerializedTableHeader header = new SerializedTableHeader((int) numRows);
     header.writeTo(writer);
     writer.flush();
+    return header.getTotalSerializedSizeInBytes();
   }
 
   /**
